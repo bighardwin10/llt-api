@@ -1,7 +1,6 @@
 import { Hono } from "hono/quick"
 const app = new Hono()
 import { cors } from 'hono/cors'
-import { env } from "cloudflare:workers"
 
 const apiVer = "v1"
 
@@ -37,9 +36,9 @@ app.get('/', (c) => {
 		c.status(403)
 		return c.json(resp.dump())
 	}
-	const major = await c.env.LLT.get("VERSION_MAJOR")
-	const minor = await c.env.LLT.get("VERSION_MINOR")
-	const patch = await c.env.LLT.get("VERSION_PATCH")
+	const major = await Number(c.env.LLT.get("VERSION_MAJOR"))
+	const minor = await Number(c.env.LLT.get("VERSION_MINOR"))
+	const patch = await Number(c.env.LLT.get("VERSION_PATCH"))
 	const resp = new TemplateResp(200,"成功",{"major": major,"minor": minor,"patch": patch})
 	return c.json(resp.dump())
 })
