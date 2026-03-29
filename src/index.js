@@ -39,7 +39,7 @@ app.get('/', (c) => {
 	const major = await c.env.LLT.get("VERSION_MAJOR")
 	const minor = await c.env.LLT.get("VERSION_MINOR")
 	const patch = await c.env.LLT.get("VERSION_PATCH")
-	const resp = new TemplateResp(200,"成功",{"major": major,"minor": minor,"patch": patch})
+	const resp = new TemplateResp(200,"成功",{"major": parseInt(major),"minor": parseInt(minor),"patch": parseInt(patch)})
 	return c.json(resp.dump())
 })
 
