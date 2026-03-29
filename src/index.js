@@ -36,9 +36,9 @@ app.get('/', (c) => {
 		c.status(403)
 		return c.json(resp.dump())
 	}
-	const major = await Number(c.env.LLT.get("VERSION_MAJOR"))
-	const minor = await Number(c.env.LLT.get("VERSION_MINOR"))
-	const patch = await Number(c.env.LLT.get("VERSION_PATCH"))
+	const major = await parseInt(c.env.LLT.get("VERSION_MAJOR"))
+	const minor = await parseInt(c.env.LLT.get("VERSION_MINOR"))
+	const patch = await parseInt(c.env.LLT.get("VERSION_PATCH"))
 	const resp = new TemplateResp(200,"成功",{"major": major,"minor": minor,"patch": patch})
 	return c.json(resp.dump())
 })
