@@ -29,7 +29,7 @@ class TemplateResp{
 app.get('/', (c) => {
 	const resp = new TemplateResp(200,"服务正常运行",null)
 	return c.json(resp.dump())
-}).get(`/${apiVer}`, (c) => {
+}).get(`/${apiVer}`, async (c) => {
 	const ua = c.req.header('User-Agent')
 	var pattern = new RegExp("^LimbusLocalizeTool/[0-9]\.[0-9]\.[0-9]$")
 	if(!pattern.test(ua)){
@@ -37,9 +37,9 @@ app.get('/', (c) => {
 		c.status(403)
 		return c.json(resp.dump())
 	}
-	const major = env.LLT.get("VERSION_MAJOR")
-	const minor = env.LLT.get("VERSION_MINOR")
-	const patch = env.LLT.get("VERSION_PATCH")
+	const major = await c.env.LLT.get("VERSION_MAJOR")
+	const minor = await c.env.LLT.get("VERSION_MINOR")
+	const patch = await c.env.LLT.get("VERSION_PATCH")
 	const resp = new TemplateResp(200,"成功",{"major": major,"minor": minor,"patch": patch})
 	return c.json(resp.dump())
 })
