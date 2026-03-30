@@ -18,15 +18,6 @@ app.use(`/${apiVer}/version/*`,bearerAuth({
 	token: apiToken
 }))
 
-const apiLimiter = (c) => rateLimiter({
-    windowMs: 600 * 1000,   // 10分钟
-    limit: 300,             // 30次
-    keyGenerator: (c) => c.req.header('cf-connecting-ip') ?? 'unknown',
-    store: new WorkersKVStore({ namespace: c.env.LLT }),
-});
-
-app.use(`/${apiVer}/*`,apiLimiter)
-
 class TemplateResp{
 	constructor(status,message,data){
 		this.status = status
