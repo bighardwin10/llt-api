@@ -18,10 +18,7 @@
     		"binding": "LLT",
     		"id": "d54a4ee853b44ffda6b4d61caa60f53e"
     	}
-  	],
-	"vars": {
-		"API_TOKEN": "pleasereplaceme"
-	}
+  	]
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
