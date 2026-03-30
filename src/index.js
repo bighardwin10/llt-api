@@ -52,15 +52,15 @@ app.get('/', (c) => {
 	return c.json(resp.dump())
 }).put(`/${apiVer}/version/major`, async (c) => {
 	const major = parseInt(await c.env.LLT.get("VERSION_MAJOR"))
-	c.env.LLT.put("VERSION_MAJOR",major + 1)
+	await c.env.LLT.put("VERSION_MAJOR",major + 1)
 	return c.json(new TemplateResp(200,"成功",{"new_major": major + 1}).dump())
 }).put(`/${apiVer}/version/minor`, async (c) => {
 	const minor = parseInt(await c.env.LLT.get("VERSION_MINOR"))
-	c.env.LLT.put("VERSION_MINOR",minor + 1)
+	await c.env.LLT.put("VERSION_MINOR",minor + 1)
 	return c.json(new TemplateResp(200,"成功",{"new_minor": minor + 1}).dump())
 }).put(`/${apiVer}/version/patch`, async (c) => {
 	const patch = parseInt(await c.env.LLT.get("VERSION_PATCH"))
-	c.env.LLT.put("VERSION_PATCH",patch + 1)
+	await c.env.LLT.put("VERSION_PATCH",patch + 1)
 	return c.json(new TemplateResp(200,"成功",{"new_patch": patch + 1}).dump())
 })
 
