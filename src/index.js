@@ -51,15 +51,18 @@ app.get('/', (c) => {
 	const resp = new TemplateResp(200,"成功",{"major": parseInt(major),"minor": parseInt(minor),"patch": parseInt(patch)})
 	return c.json(resp.dump())
 }).put(`/${apiVer}/version/major`, async (c) => {
-	const major = parseInt(await c.env.LLT.get("VERSION_MAJOR"))
-	await c.env.LLT.put("VERSION_MAJOR",major + 1)
+	const majr = await c.env.LLT.get("VERSION_MAJOR")
+	const major = parseInt(majr)
+	await c.env.LLT.put("VERSION_MAJOR",parseInt(major) + 1)
 	return c.json(new TemplateResp(200,"成功",{"new_major": major + 1}).dump())
 }).put(`/${apiVer}/version/minor`, async (c) => {
-	const minor = parseInt(await c.env.LLT.get("VERSION_MINOR"))
+	const minr = await c.env.LLT.get("VERSION_MINOR")
+	const minor = parseInt(minr)
 	await c.env.LLT.put("VERSION_MINOR",minor + 1)
 	return c.json(new TemplateResp(200,"成功",{"new_minor": minor + 1}).dump())
 }).put(`/${apiVer}/version/patch`, async (c) => {
-	const patch = parseInt(await c.env.LLT.get("VERSION_PATCH"))
+	const pach = await c.env.LLT.get("VERSION_PATCH")
+	const patch = parseInt(pach)
 	await c.env.LLT.put("VERSION_PATCH",patch + 1)
 	return c.json(new TemplateResp(200,"成功",{"new_patch": patch + 1}).dump())
 })
