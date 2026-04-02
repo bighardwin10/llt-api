@@ -89,7 +89,7 @@ app.get('/', (c) => {
 	// 代理r2译文下载
 	const resp = await fetch("https://api.github.com/repos/bighardwin10/LimbusAutoLocalize/releases/latest",{headers: {"User-Agent": "LimbusLocalizeTool"}})
 	if(!resp.ok || resp.status != 200){
-		c.status(500)
+		c.status(resp.status)
 		console.error(resp.status)
 		return c.json(new TemplateResp(false,"Github API错误",null).dump())
 	}
