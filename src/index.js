@@ -91,7 +91,7 @@ app.get('/', (c) => {
 	if(!resp.ok || resp.status != 200){
 		c.status(resp.status)
 		console.error(resp.status.toString() + " " + resp.text())
-		return c.json(new TemplateResp(false,"Github API错误",null).dump())
+		return c.json(new TemplateResp(false,resp.text(),null).dump())
 	}
 	const json = await resp.json()
 	const versionTag = json.tag_name
