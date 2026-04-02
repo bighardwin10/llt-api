@@ -90,7 +90,7 @@ app.get('/', (c) => {
 	const resp = await fetch("https://api.github.com/repos/bighardwin10/LimbusAutoLocalize/releases/latest",{headers: {"User-Agent": "LimbusLocalizeTool"}})
 	if(!resp.ok || resp.status != 200){
 		c.status(resp.status)
-		console.error(resp.status)
+		console.error(resp.status.toString() + " " + resp.text())
 		return c.json(new TemplateResp(false,"Github API错误",null).dump())
 	}
 	const json = await resp.json()
