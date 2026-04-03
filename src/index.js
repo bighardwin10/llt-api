@@ -98,7 +98,7 @@ app.get('/', (c) => {
 	// 代理r2译文下载
 	const versionTag = await c.env.LLT.get("TRANS_VER")
 	const headers = c.req.raw.headers
-	const object = await c.env.R2.get(`LimbusAutoLocalize_2026033101.7z`,{
+	const object = await c.env.R2.get(`LimbusAutoLocalize_${versionTag}.7z`,{
 		onlyIf: headers,
 		range: headers
 	})
@@ -107,6 +107,7 @@ app.get('/', (c) => {
 	}
 	const respHeaders = new Headers()
 	object.writeHttpMetadata(respHeaders)
+	respHeaders.append(`Content-Disposition","attachment; filename="LimbusAutoLocalize_${versionTag}.7z"`)
 	respHeaders.set('etag', object.httpEtag)
 	const hasBody = 'body' in object
 	return new Response(hasBody ? object.body : null, {
