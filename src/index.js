@@ -7,6 +7,7 @@ import { rateLimiter } from "hono-rate-limiter"
 
 const apiVer = "v1"
 const apiToken = env.API_TOKEN ?? "apitoken"
+const githubToken = env.GH_TOKEN
 
 app.use("/*",cors({
 	origin: "*",
@@ -76,7 +77,7 @@ app.get('/', (c) => {
 	return c.json(new TemplateResp(true,"成功",{"new_patch": patch + 1}).dump())
 }).get(`/${apiVer}/translation`, async (c) => {
 	// 获取译文版本号（yyyymmdd[a]）
-	const resp = await fetch("https://api.github.com/repos/bighardwin10/LimbusAutoLocalize/releases/latest",{headers: {"User-Agent": "LimbusLocalizeTool"}})
+	const resp = await fetch("https://api.github.com/repos/bighardwin10/LimbusAutoLocalize/releases/latest",{headers: {"User-Agent": "LimbusLocalizeTool","Authorization": `Bearer ${githubToken}`}})
 	if(!resp.ok || resp.status != 200){
 		c.status(resp.status)
 		console.error(resp.status)
@@ -87,7 +88,7 @@ app.get('/', (c) => {
 	return c.json(new TemplateResp(true,"成功",{"version": versionTag}))
 }).get(`/${apiVer}/translation/file`, async (c) => {
 	// 代理r2译文下载
-	const resp = await fetch("https://api.github.com/repos/bighardwin10/LimbusAutoLocalize/releases/latest",{headers: {"User-Agent": "LimbusLocalizeTool"}})
+	const resp = await fetch("https://api.github.com/repos/bighardwin10/LimbusAutoLocalize/releases/latest",{headers: {"User-Agent": "LimbusLocalizeTool","Authorization": `Bearer ${githubToken}`}})
 	if(!resp.ok || resp.status != 200){
 		c.status(resp.status)
 		console.error(resp.status.toString() + " " + resp.text())
