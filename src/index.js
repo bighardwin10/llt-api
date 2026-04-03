@@ -92,25 +92,11 @@ app.get('/', (c) => {
 	return c.json(new TemplateResp(true,"成功",{"new_patch": patch + 1}).dump())
 }).get(`/${apiVer}/translation`, async (c) => {
 	// 获取译文版本号（yyyymmdd[a]）
-	const resp = await fetch("https://api.github.com/repos/bighardwin10/LimbusAutoLocalize/releases/latest",{headers: {"User-Agent": "LimbusLocalizeTool","Authorization": `Bearer ${githubToken}`}})
-	if(!resp.ok || resp.status != 200){
-		c.status(resp.status)
-		console.error(resp.status)
-		return c.json(new TemplateResp(false,resp.text(),null).dump())
-	}
-	const json = await resp.json()
-	const versionTag = json.tag_name
+	const versionTag = await c.env.LLT.get("TRANS_VER")
 	return c.json(new TemplateResp(true,"成功",{"version": versionTag}))
 }).get(`/${apiVer}/translation/file`, async (c) => {
 	// 代理r2译文下载
-	const resp = await fetch("https://api.github.com/repos/bighardwin10/LimbusAutoLocalize/releases/latest",{headers: {"User-Agent": "LimbusLocalizeTool","Authorization": `Bearer ${githubToken}`}})
-	if(!resp.ok || resp.status != 200){
-		c.status(resp.status)
-		console.error(resp.status.toString() + " " + resp.text())
-		return c.json(new TemplateResp(false,resp.text(),null).dump())
-	}
-	const json = await resp.json()
-	const versionTag = json.tag_name
+	const versionTag = await c.env.LLT.get("TRANS_VER")
 	const headers = c.req.raw.headers
 	const object = await c.env.R2.get(`LimbusAutoLocalize_${versionTag}`,{
 		onlyIf: headers,
