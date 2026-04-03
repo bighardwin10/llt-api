@@ -106,8 +106,8 @@ app.get('/', (c) => {
 		return c.json(new TemplateResp(404,"未找到翻译文件，请尝试联系开发者",null),404)
 	}
 	const respHeaders = new Headers()
+	respHeaders.set("Content-Disposition",`attachment; filename="LimbusAutoLocalize_${versionTag}.7z"`)
 	object.writeHttpMetadata(respHeaders)
-	respHeaders.set(`Content-Disposition","attachment; filename="LimbusAutoLocalize_${versionTag}.7z"`)
 	respHeaders.set('etag', object.httpEtag)
 	const hasBody = 'body' in object
 	return new Response(hasBody ? object.body : null, {
