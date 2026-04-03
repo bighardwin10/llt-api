@@ -107,7 +107,7 @@ app.get('/', (c) => {
 	}
 	const respHeaders = new Headers()
 	object.writeHttpMetadata(respHeaders)
-	respHeaders.append(`Content-Disposition","attachment; filename="LimbusAutoLocalize_${versionTag}.7z"`)
+	respHeaders.set(`Content-Disposition","attachment; filename="LimbusAutoLocalize_${versionTag}.7z"`)
 	respHeaders.set('etag', object.httpEtag)
 	const hasBody = 'body' in object
 	return new Response(hasBody ? object.body : null, {
