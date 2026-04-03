@@ -78,9 +78,9 @@ app.get('/', (c) => {
 	// 获取译文版本号（yyyymmdd[a]）
 	const resp = await fetch("https://api.github.com/repos/bighardwin10/LimbusAutoLocalize/releases/latest",{headers: {"User-Agent": "LimbusLocalizeTool"}})
 	if(!resp.ok || resp.status != 200){
-		c.status(500)
+		c.status(resp.status)
 		console.error(resp.status)
-		return c.json(new TemplateResp(false,"Github API错误",null).dump())
+		return c.json(new TemplateResp(false,resp.text(),null).dump())
 	}
 	const json = await resp.json()
 	const versionTag = json.tag_name
