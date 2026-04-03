@@ -98,7 +98,7 @@ app.get('/', (c) => {
 	// 代理r2译文下载
 	const versionTag = await c.env.LLT.get("TRANS_VER")
 	const headers = c.req.raw.headers
-	const object = await c.env.R2.get(`LimbusAutoLocalize_${versionTag}`,{
+	const object = await c.env.R2.get(`LimbusAutoLocalize_2026033101.7z`,{
 		onlyIf: headers,
 		range: headers
 	})
