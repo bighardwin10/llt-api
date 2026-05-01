@@ -140,7 +140,7 @@ app
 		}
 		let version = formatedDayTime + smallVersion;
 		console.log(version);
-		await c.env.LLT.put('TRANS_VER', formatedDayTime);
+		await c.env.LLT.put('TRANS_VER', version);
 		await c.env.R2.put(`LimbusAutoLocalize_${version}.7z`, c.req.raw.body);
 		return c.json(new TemplateResp(200, '上传成功', { version: version,i: i }), 200);
 	});
