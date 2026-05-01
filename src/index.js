@@ -130,8 +130,10 @@ app
 		const now = new Date()
 		let formatedDayTime = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;;
 		let smallVersion = '01';
+		let i = false
 		if (formatedDayTime == dayTime) {
 			// 日期相同
+			i = true
 			let sV = Number(versionTag.slice(8, 10));
 			sV++;
 			smallVersion = String(sV).padStart(2, '0');
@@ -140,7 +142,7 @@ app
 		console.log(version);
 		await c.env.LLT.put('TRANS_VER', formatedDayTime);
 		await c.env.R2.put(`LimbusAutoLocalize_${version}.7z`, c.req.raw.body);
-		return c.json(new TemplateResp(200, '上传成功', { version: version }), 200);
+		return c.json(new TemplateResp(200, '上传成功', { version: version,i: i }), 200);
 	});
 
 export default app;
