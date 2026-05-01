@@ -7,7 +7,6 @@ import { rateLimiter } from "hono-rate-limiter"
 
 const apiVer = "v1"
 const apiToken = env.API_TOKEN ?? "apitoken"
-const githubToken = env.GH_TOKEN
 
 app.use("/*",cors({
 	origin: "*",
@@ -18,25 +17,16 @@ app.use(`/${apiVer}/version/*`,bearerAuth({
 	token: apiToken
 }))
 
+// 译文上传保护
+app.use(`/${apiVer}/translation/upload`,bearerAuth({
+	token: apiToken
+}))
+
 // 精确控制速率限制，排除不需要保护的接口
 app.use(`/${apiVer}/*`, rateLimiter({
 	binding: (c) => c.env.RATELIMITER,
 	keyGenerator: (c) => c.req.header("cf-connecting-ip") ?? "",
-}), async (c, next) => {
-	// 为 /v1/translation 添加缓存
-	if (c.req.path === `/${apiVer}/translation`) {
-		const cachedResponse = await c.env.LLT.get("TRANSLATION_CACHE")
-		const cachedTime = await c.env.LLT.get("TRANSLATION_CACHE_TIME")
-		const now = Date.now()
-		
-		// 缓存5分钟
-		if (cachedResponse && cachedTime && (now - parseInt(cachedTime) < 300000)) {
-			const resp = new TemplateResp(true,"成功",{"version": cachedResponse})
-			return c.json(resp.dump())
-		}
-	}
-	await next()
-})
+}))
 
 class TemplateResp{
 	constructor(status,message,data){
@@ -114,6 +104,10 @@ app.get('/', (c) => {
     	status: hasBody ? 200 : 412,
     	headers: respHeaders,
   	})
+}).put(`/${apiVer}/translation/upload`, async (c) => {
+	const versionTag = await c.env.LLT.get("TRANS_VER")
+	await c.env.R2.put(`LimbusAutoLocalize_${versionTag}.7z`,c.req.raw.body,{httpMetadata: "application/x-7z-compressed"})
+	return c.json(new TemplateResp(200,"上传成功",null),200)
 })
 
 export default app
