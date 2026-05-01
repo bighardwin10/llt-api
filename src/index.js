@@ -8,18 +8,6 @@ import { rateLimiter } from 'hono-rate-limiter';
 const apiVer = 'v1';
 const apiToken = env.API_TOKEN ?? 'apitoken';
 
-function formatDate(date, template) {
-	const map = {
-		YYYY: date.getFullYear(),
-		MM: String(date.getMonth() + 1).padStart(2, '0'),
-		DD: String(date.getDate()).padStart(2, '0'),
-		HH: String(date.getHours()).padStart(2, '0'),
-		mm: String(date.getMinutes()).padStart(2, '0'),
-		ss: String(date.getSeconds()).padStart(2, '0'),
-	};
-	return template.replace(/YYYY|MM|DD|HH|mm|ss/g, (matched) => map[matched]);
-}
-
 app.use(
 	'/*',
 	cors({
@@ -139,7 +127,8 @@ app
 	.put(`/${apiVer}/translation/upload`, async (c) => {
 		const versionTag = await c.env.LLT.get('TRANS_VER');
 		let dayTime = versionTag.slice(0, 8);
-		let formatedDayTime = formatDate(new Date(), 'YYYYMMDD');
+		const now = new Date()
+		let formatedDayTime = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;;
 		let smallVersion = '01';
 		if (formatedDayTime == dayTime) {
 			// 日期相同
@@ -149,7 +138,7 @@ app
 		}
 		let version = formatedDayTime + smallVersion;
 		console.log(version);
-		const bucket = c.env.MY_BUCKET;
+		const bucket = c.env.R2;
 		// 正则：匹配 LimbusAutoLocalize_今日日期两位数字.7z
 		const excludePattern = new RegExp(`^LimbusAutoLocalize_${formatedDayTime}\\d{2}\\.7z$`);
 
