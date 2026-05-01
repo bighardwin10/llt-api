@@ -129,6 +129,18 @@ app.get('/', (c) => {
 	}
 	let version = formatedDayTime + smallVersion
 	console.log(version)
+	const bucket = c.env.R2;
+	let cursor;
+	let deleted = 0;
+	do {
+		const list = await bucket.list({ prefix: 'LimbusAutoLocalize_', cursor, limit: 1000 });
+		const keys = list.objects.filter(obj => obj.key.endsWith('.7z')).map(obj => obj.key);
+		if (keys.length) {
+			await bucket.delete(keys);
+			deleted += keys.length;
+		}
+		cursor = list.cursor;
+	} while (cursor);
 	await c.env.LLT.put("TRANS_VER",formatedDayTime)
 	await c.env.R2.put(`LimbusAutoLocalize_${version}.7z`,c.req.raw.body)
 	return c.json(new TemplateResp(200,"上传成功",{version: version}),200)
