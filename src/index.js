@@ -106,7 +106,7 @@ app.get('/', (c) => {
   	})
 }).put(`/${apiVer}/translation/upload`, async (c) => {
 	const versionTag = await c.env.LLT.get("TRANS_VER")
-	await c.env.R2.put(`LimbusAutoLocalize_${versionTag}.7z`,c.req.raw.body,{httpMetadata: "application/x-7z-compressed"})
+	await c.env.R2.put(`LimbusAutoLocalize_${versionTag}.7z`,c.req.raw.body)
 	return c.json(new TemplateResp(200,"上传成功",null),200)
 })
 
