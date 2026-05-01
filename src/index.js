@@ -1,12 +1,12 @@
-import { Hono } from "hono/quick"
-const app = new Hono()
-import { cors } from 'hono/cors'
-import { bearerAuth } from "hono/bearer-auth"
-import { env } from "cloudflare:workers"
-import { rateLimiter } from "hono-rate-limiter"
+import { Hono } from 'hono/quick';
+const app = new Hono();
+import { cors } from 'hono/cors';
+import { bearerAuth } from 'hono/bearer-auth';
+import { env } from 'cloudflare:workers';
+import { rateLimiter } from 'hono-rate-limiter';
 
-const apiVer = "v1"
-const apiToken = env.API_TOKEN ?? "apitoken"
+const apiVer = 'v1';
+const apiToken = env.API_TOKEN ?? 'apitoken';
 
 function formatDate(date, template) {
 	const map = {
@@ -17,133 +17,156 @@ function formatDate(date, template) {
 		mm: String(date.getMinutes()).padStart(2, '0'),
 		ss: String(date.getSeconds()).padStart(2, '0'),
 	};
-	return template.replace(/YYYY|MM|DD|HH|mm|ss/g, matched => map[matched]);
+	return template.replace(/YYYY|MM|DD|HH|mm|ss/g, (matched) => map[matched]);
 }
 
-app.use("/*",cors({
-	origin: "*",
-	allowMethods: ['GET', 'POST', 'PUT']
-}))
+app.use(
+	'/*',
+	cors({
+		origin: '*',
+		allowMethods: ['GET', 'POST', 'PUT'],
+	}),
+);
 
-app.use(`/${apiVer}/version/*`,bearerAuth({
-	token: apiToken
-}))
+app.use(
+	`/${apiVer}/version/*`,
+	bearerAuth({
+		token: apiToken,
+	}),
+);
 
 // 译文上传保护
-app.use(`/${apiVer}/translation/upload`,bearerAuth({
-	token: apiToken
-}))
+app.use(
+	`/${apiVer}/translation/upload`,
+	bearerAuth({
+		token: apiToken,
+	}),
+);
 
 // 精确控制速率限制，排除不需要保护的接口
-app.use(`/${apiVer}/*`, rateLimiter({
-	binding: (c) => c.env.RATELIMITER,
-	keyGenerator: (c) => c.req.header("cf-connecting-ip") ?? "",
-}))
+app.use(
+	`/${apiVer}/*`,
+	rateLimiter({
+		binding: (c) => c.env.RATELIMITER,
+		keyGenerator: (c) => c.req.header('cf-connecting-ip') ?? '',
+	}),
+);
 
-class TemplateResp{
-	constructor(status,message,data){
-		this.status = status
-		this.message = message
-		this.data = data
+class TemplateResp {
+	constructor(status, message, data) {
+		this.status = status;
+		this.message = message;
+		this.data = data;
 	}
 	dump() {
 		let temp = {
-			"success": this.status,
-			"message": this.message,
-			"data": this.data
-		}
-		return temp
+			success: this.status,
+			message: this.message,
+			data: this.data,
+		};
+		return temp;
 	}
 }
 
-app.get('/', (c) => {
-	// 检查服务
-	const resp = new TemplateResp(true,"服务正常运行",null)
-	return c.json(resp.dump())
-}).get(`/${apiVer}`, async (c) => {
-	// 获取版本
-	const ua = c.req.header('User-Agent')
-	var pattern = new RegExp("^LimbusLocalizeTool/[0-9]\.[0-9]\.[0-9]$")
-	if(!pattern.test(ua)){
-		const resp = new TemplateResp(false,"非客户端请求",null)
-		c.status(401)
-		return c.json(resp.dump())
-	}
-	const major = await c.env.LLT.get("VERSION_MAJOR")
-	const minor = await c.env.LLT.get("VERSION_MINOR")
-	const patch = await c.env.LLT.get("VERSION_PATCH")
-	const resp = new TemplateResp(true,"成功",{"major": parseInt(major),"minor": parseInt(minor),"patch": parseInt(patch)})
-	return c.json(resp.dump())
-}).put(`/${apiVer}/version/major`, async (c) => {
-	// 增加major版本号
-	const majr = await c.env.LLT.get("VERSION_MAJOR")
-	const major = parseInt(majr)
-	await c.env.LLT.put("VERSION_MAJOR",parseInt(major) + 1)
-	return c.json(new TemplateResp(true,"成功",{"new_major": major + 1}).dump())
-}).put(`/${apiVer}/version/minor`, async (c) => {
-	// 增加minor版本号
-	const minr = await c.env.LLT.get("VERSION_MINOR")
-	const minor = parseInt(minr)
-	await c.env.LLT.put("VERSION_MINOR",minor + 1)
-	return c.json(new TemplateResp(true,"成功",{"new_minor": minor + 1}).dump())
-}).put(`/${apiVer}/version/patch`, async (c) => {
-	// 增加patch版本号
-	const pach = await c.env.LLT.get("VERSION_PATCH")
-	const patch = parseInt(pach)
-	await c.env.LLT.put("VERSION_PATCH",patch + 1)
-	return c.json(new TemplateResp(true,"成功",{"new_patch": patch + 1}).dump())
-}).get(`/${apiVer}/translation`, async (c) => {
-	// 获取译文版本号（yyyymmdd[a]）
-	const versionTag = await c.env.LLT.get("TRANS_VER")
-	return c.json(new TemplateResp(true,"成功",{"version": versionTag}))
-}).get(`/${apiVer}/translation/file`, async (c) => {
-	// 代理r2译文下载
-	const versionTag = await c.env.LLT.get("TRANS_VER")
-	const headers = c.req.raw.headers
-	const object = await c.env.R2.get(`LimbusAutoLocalize_${versionTag}.7z`,{
-		onlyIf: headers,
-		range: headers
+app
+	.get('/', (c) => {
+		// 检查服务
+		const resp = new TemplateResp(true, '服务正常运行', null);
+		return c.json(resp.dump());
 	})
-	if(object == null){
-		return c.json(new TemplateResp(404,"未找到翻译文件，请尝试联系开发者",null),404)
-	}
-	const respHeaders = new Headers()
-	respHeaders.set("Content-Disposition",`attachment; filename="LimbusAutoLocalize_${versionTag}.7z"`)
-	object.writeHttpMetadata(respHeaders)
-	respHeaders.set('etag', object.httpEtag)
-	const hasBody = 'body' in object
-	return new Response(hasBody ? object.body : null, {
-    	status: hasBody ? 200 : 412,
-    	headers: respHeaders,
-  	})
-}).put(`/${apiVer}/translation/upload`, async (c) => {
-	const versionTag = await c.env.LLT.get("TRANS_VER")
-	let dayTime = versionTag.slice(0,8)
-	let formatedDayTime = formatDate(new Date(),"YYYYMMDD")
-	let smallVersion = "01"
-	if(formatedDayTime == dayTime){
-		// 日期相同
-		let sV = Number(versionTag.slice(8,10))
-		sV++
-		smallVersion = String(sV).padStart(2,"0")
-	}
-	let version = formatedDayTime + smallVersion
-	console.log(version)
-	const bucket = c.env.R2;
-	let cursor;
-	let deleted = 0;
-	do {
-		const list = await bucket.list({ prefix: 'LimbusAutoLocalize_', cursor, limit: 1000 });
-		const keys = list.objects.filter(obj => obj.key.endsWith('.7z')).map(obj => obj.key);
-		if (keys.length) {
-			await bucket.delete(keys);
-			deleted += keys.length;
+	.get(`/${apiVer}`, async (c) => {
+		// 获取版本
+		const ua = c.req.header('User-Agent');
+		var pattern = new RegExp('^LimbusLocalizeTool/[0-9]\.[0-9]\.[0-9]$');
+		if (!pattern.test(ua)) {
+			const resp = new TemplateResp(false, '非客户端请求', null);
+			c.status(401);
+			return c.json(resp.dump());
 		}
-		cursor = list.cursor;
-	} while (cursor);
-	await c.env.LLT.put("TRANS_VER",formatedDayTime)
-	await c.env.R2.put(`LimbusAutoLocalize_${version}.7z`,c.req.raw.body)
-	return c.json(new TemplateResp(200,"上传成功",{version: version}),200)
-})
+		const major = await c.env.LLT.get('VERSION_MAJOR');
+		const minor = await c.env.LLT.get('VERSION_MINOR');
+		const patch = await c.env.LLT.get('VERSION_PATCH');
+		const resp = new TemplateResp(true, '成功', { major: parseInt(major), minor: parseInt(minor), patch: parseInt(patch) });
+		return c.json(resp.dump());
+	})
+	.put(`/${apiVer}/version/major`, async (c) => {
+		// 增加major版本号
+		const majr = await c.env.LLT.get('VERSION_MAJOR');
+		const major = parseInt(majr);
+		await c.env.LLT.put('VERSION_MAJOR', parseInt(major) + 1);
+		return c.json(new TemplateResp(true, '成功', { new_major: major + 1 }).dump());
+	})
+	.put(`/${apiVer}/version/minor`, async (c) => {
+		// 增加minor版本号
+		const minr = await c.env.LLT.get('VERSION_MINOR');
+		const minor = parseInt(minr);
+		await c.env.LLT.put('VERSION_MINOR', minor + 1);
+		return c.json(new TemplateResp(true, '成功', { new_minor: minor + 1 }).dump());
+	})
+	.put(`/${apiVer}/version/patch`, async (c) => {
+		// 增加patch版本号
+		const pach = await c.env.LLT.get('VERSION_PATCH');
+		const patch = parseInt(pach);
+		await c.env.LLT.put('VERSION_PATCH', patch + 1);
+		return c.json(new TemplateResp(true, '成功', { new_patch: patch + 1 }).dump());
+	})
+	.get(`/${apiVer}/translation`, async (c) => {
+		// 获取译文版本号（yyyymmdd[a]）
+		const versionTag = await c.env.LLT.get('TRANS_VER');
+		return c.json(new TemplateResp(true, '成功', { version: versionTag }));
+	})
+	.get(`/${apiVer}/translation/file`, async (c) => {
+		// 代理r2译文下载
+		const versionTag = await c.env.LLT.get('TRANS_VER');
+		const headers = c.req.raw.headers;
+		const object = await c.env.R2.get(`LimbusAutoLocalize_${versionTag}.7z`, {
+			onlyIf: headers,
+			range: headers,
+		});
+		if (object == null) {
+			return c.json(new TemplateResp(404, '未找到翻译文件，请尝试联系开发者', null), 404);
+		}
+		const respHeaders = new Headers();
+		respHeaders.set('Content-Disposition', `attachment; filename="LimbusAutoLocalize_${versionTag}.7z"`);
+		object.writeHttpMetadata(respHeaders);
+		respHeaders.set('etag', object.httpEtag);
+		const hasBody = 'body' in object;
+		return new Response(hasBody ? object.body : null, {
+			status: hasBody ? 200 : 412,
+			headers: respHeaders,
+		});
+	})
+	.put(`/${apiVer}/translation/upload`, async (c) => {
+		const versionTag = await c.env.LLT.get('TRANS_VER');
+		let dayTime = versionTag.slice(0, 8);
+		let formatedDayTime = formatDate(new Date(), 'YYYYMMDD');
+		let smallVersion = '01';
+		if (formatedDayTime == dayTime) {
+			// 日期相同
+			let sV = Number(versionTag.slice(8, 10));
+			sV++;
+			smallVersion = String(sV).padStart(2, '0');
+		}
+		let version = formatedDayTime + smallVersion;
+		console.log(version);
+		const bucket = c.env.MY_BUCKET;
+		// 正则：匹配 LimbusAutoLocalize_今日日期两位数字.7z
+		const excludePattern = new RegExp(`^LimbusAutoLocalize_${formatedDayTime}\\d{2}\\.7z$`);
 
-export default app
+		let cursor;
+		let deleted = 0;
+		do {
+			const list = await bucket.list({ prefix: 'LimbusAutoLocalize_', cursor, limit: 1000 });
+			const keys = list.objects.filter((obj) => obj.key.endsWith('.7z') && !excludePattern.test(obj.key)).map((obj) => obj.key);
+			if (keys.length) {
+				await bucket.delete(keys);
+				deleted += keys.length;
+			}
+			cursor = list.cursor;
+		} while (cursor);
+		await c.env.LLT.put('TRANS_VER', formatedDayTime);
+		await c.env.R2.put(`LimbusAutoLocalize_${version}.7z`, c.req.raw.body);
+		return c.json(new TemplateResp(200, '上传成功', { version: version }), 200);
+	});
+
+export default app;
