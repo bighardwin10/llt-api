@@ -8,6 +8,18 @@ import { rateLimiter } from "hono-rate-limiter"
 const apiVer = "v1"
 const apiToken = env.API_TOKEN ?? "apitoken"
 
+function formatDate(date, template) {
+	const map = {
+		YYYY: date.getFullYear(),
+		MM: String(date.getMonth() + 1).padStart(2, '0'),
+		DD: String(date.getDate()).padStart(2, '0'),
+		HH: String(date.getHours()).padStart(2, '0'),
+		mm: String(date.getMinutes()).padStart(2, '0'),
+		ss: String(date.getSeconds()).padStart(2, '0'),
+	};
+	return template.replace(/YYYY|MM|DD|HH|mm|ss/g, matched => map[matched]);
+}
+
 app.use("/*",cors({
 	origin: "*",
 	allowMethods: ['GET', 'POST', 'PUT']
@@ -106,7 +118,19 @@ app.get('/', (c) => {
   	})
 }).put(`/${apiVer}/translation/upload`, async (c) => {
 	const versionTag = await c.env.LLT.get("TRANS_VER")
-	await c.env.R2.put(`LimbusAutoLocalize_${versionTag}.7z`,c.req.raw.body)
+	let dayTime = versionTag.slice(0,8)
+	let formatedDayTime = formatDate(new Date(),"YYYYMMDD")
+	let smallVersion = "01"
+	if(formatedDayTime == dayTime){
+		// 日期相同
+		let sV = Number(versionTag.slice(8,10))
+		sV++
+		smallVersion = String(sV).padStart(2,"0")
+	}
+	let version = formatedDayTime + smallVersion
+	console.log(version)
+	await c.env.LLT.put("TRANS_VER",version)
+	await c.env.R2.put(`LimbusAutoLocalize_${version}.7z`,c.req.raw.body)
 	return c.json(new TemplateResp(200,"上传成功",null),200)
 })
 
